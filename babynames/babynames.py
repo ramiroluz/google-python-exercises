@@ -34,15 +34,70 @@ Suggested milestones for incremental development:
  -Fix main() to use the extract_names list
 """
 
+def test_reader(filename):
+    try:
+            from StringIO import StringIO
+    except ImportError:
+            from io import StringIO
 
-def extract_names(filename):
+    html_text = (
+        '<html>\n'
+        '  <body>\n'
+        '    <h3 align="center">Popularity in 1990</h3>\n'
+        '      <table>\n'
+        '        <tr align="right">\n'
+        '          <td>1</td><td>Michael</td><td>Jessica</td>\n'
+        '        </tr>\n'
+        '        <tr align="right">\n'
+        '          <td>2</td><td>Christopher</td><td>Ashley</td>\n'
+        '        </tr>\n'
+        '        <tr align="right">\n'
+        '          <td>3</td><td>Matthew</td><td>Brittany</td>\n'
+        '        </tr>\n'
+        '  </body>\n'
+        '</html>'
+    )
+
+    return StringIO(html_text)
+
+
+def test_extract_names():
+    expected = [
+        '1990',
+        'Ashley 2',
+        'Brittany 3',
+        'Christopher 2',
+        'Jessica 1',
+        'Matthew 3',
+        'Michael 1',
+    ]
+
+    names = extract_names('babies.html', reader=test_reader)
+    assert names == expected
+
+def extract_names(filename, reader=open):
     """
     Given a file name for baby.html, returns a list starting with the year string
     followed by the name-rank strings in alphabetical order.
     ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
     """
-    # +++your code here+++
-    return
+    try:
+        babies = reader(filename)
+        html_text = babies.read()
+    finally:
+        babies.close()
+
+    year = extract_year(html_text)
+    rows = extract_rows(html_text)
+    cols = extract_cols(rows)
+    data = cols_to_dict(cols)
+
+    baby_names = []
+    for rank, names in data.items():
+        for name in names:
+            baby_names.append('{} {}'.format(name, rank))
+
+    return [year] + sorted(baby_names)
 
 
 def test_extract_year():
@@ -140,7 +195,7 @@ def test_cols_to_dict():
         ('3', 'Matthew', 'Brittany')
     ]
 
-    expect = {
+    expected = {
         '1': ('Michael', 'Jessica'),
         '2': ('Christopher', 'Ashley'),
         '3': ('Matthew', 'Brittany'),
@@ -159,6 +214,7 @@ def tests():
     test_extract_rows()
     test_extract_cols()
     test_cols_to_dict()
+    test_extract_names()
 
 
 def main():
@@ -175,12 +231,22 @@ def main():
     summary = False
     if args[0] == '--summaryfile':
         summary = True
+        symmary_filename = args[1]
         del args[0]
+        del args[1]
 
-    tests()
-        # +++your code here+++
-        # For each filename, get the names, then either print the text output
-        # or write it to a summary file
+    # +++your code here+++
+    # For each filename, get the names, then either print the text output
+    # or write it to a summary file
+    for filename in args:
+        babies_list = extract_names(filename)
+        if summary:
+            with open(summary_filename, 'a') as summary_file:
+                summary_file.write('\n'.join(babies_list))
+        else:
+            print('\n'.join(babies_list))
+
+    # tests()
 
 
 if __name__ == '__main__':
