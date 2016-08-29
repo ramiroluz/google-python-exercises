@@ -15,6 +15,7 @@ import re
 import os
 import shutil
 import subprocess
+import shlex
 
 """Copy Special exercise
 
@@ -23,6 +24,30 @@ import subprocess
 
 # +++your code here+++
 # Write functions and modify main() to call them
+def get_special_paths(src_dir):
+    all_files = os.listdir(src_dir)
+    fname_expression = re.compile('^.*__\w.*__.*')
+    return [
+        os.path.abspath(fname) for fname in all_files
+        if fname_expression.match(fname)
+    ]
+
+
+def copy_to(paths, dst_dir):
+    os.path.isdir(dst_dir) or os.makedirs(dst_dir)
+
+    for fname in paths:
+        shutil.copy(fname, dst_dir)
+
+
+def zip_to(paths, zippath):
+    command = 'zip -j {} {}'.format(zippath, ' '.join(paths))
+    print("Command I'm going to do: {}".format(command))
+    try:
+        subprocess.call(shlex.split(command))
+    except OSError as e:
+        print('zip I/O error: {}'.format(e.strerror))
+        print('zip error: Could not create output file ({})'.format(zippath))
 
 
 def main():
@@ -53,8 +78,17 @@ def main():
         print("error: must specify one or more dirs")
         sys.exit(1)
 
-        # +++your code here+++
-        # Call your functions
+    # +++your code here+++
+    # Call your functions
+    paths = []
+    for src_dir in args:
+        paths.extend(get_special_paths(src_dir))
+
+    if todir:
+        copy_to(paths, todir)
+
+    if tozip:
+        zip_to(paths, tozip)
 
 
 if __name__ == "__main__":
