@@ -104,11 +104,6 @@ def extract_rows(html_text):
     return rows or []
 
 
-def tests():
-    test_extract_year()
-    test_extract_rows()
-
-
 def test_extract_cols():
     rows = [
         '<td>1</td><td>Michael</td><td>Jessica</td>',
@@ -132,8 +127,10 @@ def extract_cols(rows):
         '(.*?)'  # row data
         '(?:</td>)'  # </td>
     )
-    cols = comp.findall(html_text)
-    return tuple(cols) or tuple()
+    cols = [
+        tuple(comp.findall(row)) for row in rows
+    ]
+    return cols
 
 
 def test_cols_to_dict():
@@ -153,8 +150,15 @@ def test_cols_to_dict():
     assert expected == data
 
 
-def cols_to_data(cols):
-    pass
+def cols_to_dict(cols):
+    return {item[0] : (item[1], item[2]) for item in cols}
+
+
+def tests():
+    test_extract_year()
+    test_extract_rows()
+    test_extract_cols()
+    test_cols_to_dict()
 
 
 def main():
