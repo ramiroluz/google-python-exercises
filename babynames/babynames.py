@@ -45,6 +45,118 @@ def extract_names(filename):
     return
 
 
+def test_extract_year():
+    html_text = (
+        '<html>\n'
+        '  <body>\n'
+        '    <h3 align="center">Popularity in 1990</h3>\n'
+        '  </body>\n'
+        '</html>'
+    )
+    expected = '1990'
+    the_year = extract_year(html_text)
+    assert expected == the_year
+
+
+def extract_year(html_text):
+    comp = re.compile(
+        '(?:<h3 align="center">Popularity in )'  # <h3>
+        '(\d{4}?)'  # year
+        '(?:</h3>)'  # </h3>
+    )
+    year = comp.findall(html_text)
+    if year:
+        return year[0]
+    return ''
+
+
+def test_extract_rows():
+    html_text = (
+        '<html>\n'
+        '  <body>\n'
+        '    <h3 align="center">Popularity in 1990</h3>\n'
+        '      <table>\n'
+        '        <tr align="right">\n'
+        '          <td>1</td><td>Michael</td><td>Jessica</td>\n'
+        '        </tr>\n'
+        '        <tr align="right">\n'
+        '          <td>2</td><td>Christopher</td><td>Ashley</td>\n'
+        '        </tr>\n'
+        '        <tr align="right">\n'
+        '          <td>3</td><td>Matthew</td><td>Brittany</td>\n'
+        '        </tr>\n'
+        '  </body>\n'
+        '</html>'
+    )
+    expected = [
+        '<td>1</td><td>Michael</td><td>Jessica</td>',
+        '<td>2</td><td>Christopher</td><td>Ashley</td>',
+        '<td>3</td><td>Matthew</td><td>Brittany</td>',
+    ]
+
+    rows = extract_rows(html_text)
+    assert expected == rows
+
+
+def extract_rows(html_text):
+    comp = re.compile('(<td>.*</td>)')
+    rows = comp.findall(html_text)
+    return rows or []
+
+
+def tests():
+    test_extract_year()
+    test_extract_rows()
+
+
+def test_extract_cols():
+    rows = [
+        '<td>1</td><td>Michael</td><td>Jessica</td>',
+        '<td>2</td><td>Christopher</td><td>Ashley</td>',
+        '<td>3</td><td>Matthew</td><td>Brittany</td>',
+    ]
+
+    expected = [
+        ('1', 'Michael', 'Jessica'),
+        ('2', 'Christopher', 'Ashley'),
+        ('3', 'Matthew', 'Brittany')
+    ]
+
+    cols = extract_cols(rows)
+    assert expected == cols
+
+
+def extract_cols(rows):
+    comp = re.compile(
+        '(?:<td>)'  # <td>
+        '(.*?)'  # row data
+        '(?:</td>)'  # </td>
+    )
+    cols = comp.findall(html_text)
+    return tuple(cols) or tuple()
+
+
+def test_cols_to_dict():
+    cols = [
+        ('1', 'Michael', 'Jessica'),
+        ('2', 'Christopher', 'Ashley'),
+        ('3', 'Matthew', 'Brittany')
+    ]
+
+    expect = {
+        '1': ('Michael', 'Jessica'),
+        '2': ('Christopher', 'Ashley'),
+        '3': ('Matthew', 'Brittany'),
+    }
+
+    data = cols_to_dict(cols)
+    assert expected == data
+
+
+def cols_to_data(cols):
+    pass
+
+
 def main():
     # This command-line parsing code is provided.
     # Make a list of command line arguments, omitting the [0] element
@@ -61,6 +173,7 @@ def main():
         summary = True
         del args[0]
 
+    tests()
         # +++your code here+++
         # For each filename, get the names, then either print the text output
         # or write it to a summary file
